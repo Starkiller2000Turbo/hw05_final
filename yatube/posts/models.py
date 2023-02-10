@@ -99,4 +99,4 @@ class Follow(DefaultModel):
     )
 
     def __str__(self) -> str:
-        return self.author, self.user
+        return f'подписка {self.user} на {self.author}'

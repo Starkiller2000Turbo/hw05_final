@@ -1,3 +1,5 @@
+import typing
+
 from django import forms
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
@@ -12,7 +14,11 @@ from yatube import settings
 User = get_user_model()
 
 
-def check_types_in_dict(self, model: Group or Post, fields: dict) -> None:
+def check_types_in_dict(
+    self,
+    model: models.Model,
+    fields: typing.Dict,
+) -> None:
     for value, expected in fields.items():
         with self.subTest(value=value):
             form_field = model._meta.get_field(value)

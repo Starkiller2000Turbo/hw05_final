@@ -18,7 +18,7 @@ class PostModelTest(TestCase):
         """Проверяем, что у модели Post корректно работает __str__."""
         # fmt: off
         self.assertEqual(
-            self.post.text[:settings.TEXT_LENGTH],  
+            self.post.text[:settings.TEXT_LENGTH],
             str(self.post),
         )
         # fmt: on
