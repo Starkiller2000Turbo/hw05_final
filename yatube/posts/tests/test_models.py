@@ -1,9 +1,9 @@
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from mixer.backend.django import mixer
 
 from posts.models import Group, Post
-from yatube import settings
 
 User = get_user_model()
 
@@ -16,10 +16,12 @@ class PostModelTest(TestCase):
 
     def test_posts_have_correct_str(self) -> None:
         """Проверяем, что у модели Post корректно работает __str__."""
+        # fmt: off
         self.assertEqual(
-            self.post.text[: settings.TEXT_LENGTH],  # fmt: skip
+            self.post.text[:settings.TEXT_LENGTH],  
             str(self.post),
         )
+        # fmt: on
 
 
 class GroupModelTest(TestCase):

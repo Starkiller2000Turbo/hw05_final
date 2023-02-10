@@ -1,14 +1,12 @@
+from behaviors.behaviors import Timestamped
 from django.db import models
 
 
-class CreatedModel(models.Model):
-    """Абстрактная модель. Добавляет дату создания."""
+class DefaultModel(models.Model):
+    class Meta:
+        abstract = True
 
-    created = models.DateTimeField(
-        verbose_name='Дата создания',
-        auto_now_add=True,
-        db_index=True,
-    )
 
+class TimestampedModel(DefaultModel, Timestamped):
     class Meta:
         abstract = True

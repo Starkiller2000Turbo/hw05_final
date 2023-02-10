@@ -1,6 +1,7 @@
 from http import HTTPStatus
 
 from django.contrib.auth import get_user_model
+from django.contrib.auth.views import redirect_to_login
 from django.core.cache import cache
 from django.test import Client, TestCase
 from django.urls import reverse
@@ -66,7 +67,7 @@ class PostURLTests(TestCase):
         cache.clear()
 
     def test_httpstatuses(self) -> None:
-        """URL-адрес существует и выдаёт https статус 200"""
+        """URL-адрес существует и выдаёт https статус 200."""
         httpstatuses = (
             (self.urls.get('group'), HTTPStatus.OK, Client()),
             (self.urls.get('index'), HTTPStatus.OK, Client()),
@@ -116,22 +117,22 @@ class PostURLTests(TestCase):
         pages = (
             (
                 self.urls.get('create'),
-                '/auth/login/?next=' + self.urls.get('create'),
+                redirect_to_login(self.urls.get('create')).url,
                 Client(),
             ),
             (
                 self.urls.get('edit'),
-                '/auth/login/?next=' + self.urls.get('edit'),
+                redirect_to_login(self.urls.get('edit')).url,
                 Client(),
             ),
             (
                 self.urls.get('comment'),
-                '/auth/login/?next=' + self.urls.get('comment'),
+                redirect_to_login(self.urls.get('comment')).url,
                 Client(),
             ),
             (
                 self.urls.get('follow'),
-                '/auth/login/?next=' + self.urls.get('follow'),
+                redirect_to_login(self.urls.get('follow')).url,
                 Client(),
             ),
             (

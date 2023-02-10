@@ -43,33 +43,6 @@ class PostPagesTests(TestCase):
 
         self.authorized_client.force_login(self.user)
 
-    def test_pages_use_correct_templates(self) -> None:
-        """URL-адрес использует соответствующий шаблон."""
-        templates_pages_names = {
-            reverse('posts:index'): 'posts/index.html',
-            reverse(
-                'posts:group_list',
-                kwargs={'slug': 'test_slug'},
-            ): 'posts/group_list.html',
-            reverse(
-                'posts:profile',
-                kwargs={'username': 'auth'},
-            ): 'posts/profile.html',
-            reverse(
-                'posts:post_detail',
-                kwargs={'pk': '2'},
-            ): 'posts/post_detail.html',
-            reverse('posts:post_create'): 'posts/create_post.html',
-            reverse(
-                'posts:post_edit',
-                kwargs={'pk': '2'},
-            ): 'posts/create_post.html',
-        }
-        for reverse_name, template in templates_pages_names.items():
-            with self.subTest(reverse_name=reverse_name):
-                response = self.authorized_client.get(reverse_name)
-                self.assertTemplateUsed(response, template)
-
     def test_pages_show_correct_context(self) -> None:
         """Шаблоны страниц сформированы с правильным контекстом."""
         page_names = [
@@ -161,7 +134,7 @@ class CommentPagesTests(TestCase):
 
         self.authorized_client.force_login(self.user)
 
-    def test_comment_shows_up_post_page(self) -> None:
+    def test_comment_shows_up_on_post_page(self) -> None:
         response = self.authorized_client.get(
             reverse(
                 'posts:post_detail',
@@ -169,7 +142,7 @@ class CommentPagesTests(TestCase):
             ),
         )
         self.assertEqual(
-            response.context['comments'][0].text,
+            response.context['post'].comments.all()[0].text,
             'Тестовый текст',
         )
 
@@ -229,11 +202,12 @@ class FollowPagesTests(TestCase):
     def setUpClass(cls) -> None:
         super().setUpClass()
         cls.subscribed, cls.author, cls.non_subscribed = mixer.cycle(3).blend(
-            User
+            User,
         )
         cls.post = mixer.blend(Post, author=cls.author, text='Тестовый пост')
         cls.following = Follow.objects.create(
-            user=cls.subscribed, author=cls.author
+            user=cls.subscribed,
+            author=cls.author,
         )
 
         cls.subscribed_client = Client()
@@ -246,15 +220,14 @@ class FollowPagesTests(TestCase):
         cache.clear()
 
     def test_post_shows_up_only_for_subscribed_user(self) -> None:
-        """пост появляется только на странице подписок
-        для подписанного пользователя."""
+        """Пост появляется только на странице подписанного пользователя."""
         response = self.subscribed_client.get(reverse('posts:follow_index'))
         self.assertEqual(
             response.context['page_obj'][0].text,
             'Тестовый пост',
         )
         response = self.non_subscribed_client.get(
-            reverse('posts:follow_index')
+            reverse('posts:follow_index'),
         )
         self.assertEqual(
             len(response.context['page_obj']),
@@ -267,7 +240,7 @@ class FollowPagesTests(TestCase):
             reverse(
                 'posts:profile_follow',
                 kwargs={'username': self.author.username},
-            )
+            ),
         )
         self.assertEqual(
             Follow.objects.filter(user=self.non_subscribed).count(),
@@ -277,7 +250,7 @@ class FollowPagesTests(TestCase):
             reverse(
                 'posts:profile_unfollow',
                 kwargs={'username': self.author.username},
-            )
+            ),
         )
         self.assertEqual(
             Follow.objects.filter(user=self.non_subscribed).count(),

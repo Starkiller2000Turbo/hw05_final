@@ -8,6 +8,6 @@ class CreationForm(UserCreationForm):
     class Meta(UserCreationForm.Meta):
         model = User
         labels = {
-            'username': 'Логин пользователя',
+            'username': 'логин пользователя',
         }
         fields = ('first_name', 'last_name', 'username', 'email')

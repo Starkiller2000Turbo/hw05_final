@@ -14,19 +14,24 @@ ALLOWED_HOSTS = [
     'testserver',
 ]
 
+# fmt: off
 INSTALLED_APPS = [
-    'about.apps.AboutConfig',
-    'core.apps.CoreConfig',
-    'posts.apps.PostsConfig',
-    'users.apps.UsersConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+
+    'behaviors.apps.BehaviorsConfig',
     'sorl.thumbnail',
+
+    'about.apps.AboutConfig',
+    'core.apps.CoreConfig',
+    'posts.apps.PostsConfig',
+    'users.apps.UsersConfig',
 ]
+# fmt: on
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -121,3 +126,5 @@ CACHES = {
         'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
     },
 }
+
+DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'

@@ -3,4 +3,4 @@ from django.apps import AppConfig
 
 class CoreConfig(AppConfig):
     name = 'core'
-    verbose_name = 'приложение с фильтрами и контекстными процессами'
+    verbose_name = 'приложение с фильтрами и контекстными процессорами'

@@ -1,4 +1,3 @@
-from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -6,10 +5,10 @@ from django.views.decorators.cache import cache_page
 
 from core.utils import paginate
 from posts.forms import CommentForm, PostForm
-from posts.models import Comment, Follow, Group, Post, User
+from posts.models import Follow, Group, Post, User
 
 
-@cache_page(20, key_prefix='index')
+@cache_page(20)
 def index(request: HttpRequest) -> HttpResponse:
     """Обработка перехода на главную страницу.
 
@@ -17,15 +16,19 @@ def index(request: HttpRequest) -> HttpResponse:
         request: Передаваемый запрос.
 
     Returns:
-        Возвращает рендер главной страницы.
+        Рендер главной страницы.
     """
-    posts = Post.objects.select_related('author', 'group')
-    obj = paginate(request, posts, settings.OBJECTS_ON_PAGE)
     return render(
         request,
         'posts/index.html',
         {
-            'page_obj': obj,
+            'page_obj': paginate(
+                request,
+                Post.objects.select_related(
+                    'author',
+                    'group',
+                ),
+            ),
         },
     )
 
@@ -35,19 +38,20 @@ def group_posts(request: HttpRequest, slug: str) -> HttpResponse:
 
     Args:
         request: Передаваемый запрос.
-        slug: Запрос определённой группы, используемый в URL
+        slug: Запрос определённой группы, используемый в URL.
 
     Returns:
-        Возвращает рендер страницы выбранной группы.
+        Рендер страницы выбранной группы.
     """
     group = get_object_or_404(Group, slug=slug)
-    posts = Post.objects.filter(group=group).select_related('author')
-    obj = paginate(request, posts, settings.OBJECTS_ON_PAGE)
     return render(
         request,
         'posts/group_list.html',
         {
-            'page_obj': obj,
+            'page_obj': paginate(
+                request,
+                group.posts.select_related('author'),
+            ),
             'group': group,
         },
     )
@@ -61,30 +65,27 @@ def profile(request: HttpRequest, username: str) -> HttpResponse:
         username: url/имя автора
 
     Returns:
-        Возвращает рендер страницы пользователя.
+        Рендер страницы пользователя.
     """
     author = get_object_or_404(User, username=username)
-    posts = Post.objects.filter(author=author).select_related('group')
-    page_obj = paginate(request, posts, settings.OBJECTS_ON_PAGE)
-    if request.user.is_authenticated:
-        following = author in (
-            follow.author
-            for follow in Follow.objects.filter(user=request.user)
-        )
-    else:
-        following = False
+    following = request.user.is_authenticated and request.user.follower.filter(
+        author=author,
+    )
     return render(
         request,
         'posts/profile.html',
         {
-            'page_obj': page_obj,
+            'page_obj': paginate(
+                request,
+                author.posts.select_related('group'),
+            ),
             'author': author,
             'following': following,
         },
     )
 
 
-def post_detail(request: HttpRequest, pk: str) -> HttpResponse:
+def post_detail(request: HttpRequest, pk: int) -> HttpResponse:
     """Обработка перехода на страницу определённого поста.
 
     Args:
@@ -92,20 +93,18 @@ def post_detail(request: HttpRequest, pk: str) -> HttpResponse:
         pk: id определённого поста
 
     Returns:
-        Возвращает рендер страницы выбранного поста.
+        Рендер страницы выбранного поста.
     """
     post = get_object_or_404(Post, id=pk)
     form = CommentForm(
         request.POST or None,
     )
-    comments = Comment.objects.filter(post=post).select_related('author')
     return render(
         request,
         'posts/post_detail.html',
         {
             'post': post,
             'form': form,
-            'comments': comments,
         },
     )
 
@@ -118,7 +117,7 @@ def post_create(request: HttpRequest) -> HttpResponse:
         request: Передаваемый запрос.
 
     Returns:
-        Возвращает рендер страницы создания поста.
+        Рендер страницы создания поста.
     """
     form = PostForm(
         request.POST or None,
@@ -132,7 +131,7 @@ def post_create(request: HttpRequest) -> HttpResponse:
         )
     form.instance.author = request.user
     form.save()
-    return redirect('posts:profile', request.user.username)
+    return redirect('posts:profile', request.user.get_username())
 
 
 @login_required
@@ -144,7 +143,7 @@ def post_edit(request: HttpRequest, pk: str) -> HttpResponse:
         pk: id поста, подвергаемого редактированию
 
     Returns:
-        Возвращает рендер страницы редактирования поста.
+        Рендер страницы редактирования поста.
     """
     post = get_object_or_404(Post, id=pk)
     if request.user != post.author:
@@ -177,15 +176,14 @@ def add_comment(request: HttpRequest, pk: str) -> HttpResponse:
         pk: id поста, подвергаемого комментированию
 
     Returns:
-        Возвращает рендер страницы выбранного поста.
+        Рендер страницы выбранного поста.
     """
     post = get_object_or_404(Post, id=pk)
     form = CommentForm(request.POST or None)
     if form.is_valid():
-        comment = form.save(commit=False)
-        comment.author = request.user
-        comment.post = post
-        comment.save()
+        form.instance.author = request.user
+        form.instance.post = post
+        form.save()
     return redirect('posts:post_detail', pk=pk)
 
 
@@ -199,16 +197,19 @@ def follow_index(request: HttpRequest) -> HttpResponse:
     Returns:
         Возвращает рендер страницы редактирования поста.
     """
-    followings = Follow.objects.filter(user=request.user)
-    posts = Post.objects.filter(
-        author__in=(follow.author for follow in followings),
-    ).select_related('author', 'group')
-    obj = paginate(request, posts, settings.OBJECTS_ON_PAGE)
     return render(
         request,
         'posts/follow.html',
         {
-            'page_obj': obj,
+            'page_obj': paginate(
+                request,
+                Post.objects.filter(
+                    author__following__user=request.user,
+                ).select_related(
+                    'author',
+                    'group',
+                ),
+            ),
         },
     )
 
@@ -222,14 +223,17 @@ def profile_follow(request: HttpRequest, username: str) -> HttpResponse:
         username: логин автора, на которого подписываются
 
     Returns:
-        Возвращает рендер страницы редактирования поста.
+        Рендер страницы редактирования поста.
     """
     author = get_object_or_404(User, username=username)
-    if author != request.user and not Follow.objects.filter(
-        author=author, user=request.user
+    if (
+        author != request.user
+        and not author.following.filter(
+            user=request.user,
+        ).exists()
     ):
         Follow.objects.create(author=author, user=request.user)
-    return redirect('posts:profile', username=author.username)
+    return redirect('posts:profile', username=username)
 
 
 @login_required
@@ -241,9 +245,11 @@ def profile_unfollow(request: HttpRequest, username: str) -> HttpResponse:
         username: логин автора, от которого отписываются
 
     Returns:
-        Возвращает рендер страницы редактирования поста.
+        Рендер страницы редактирования поста.
     """
-    author = get_object_or_404(User, username=username)
-    if Follow.objects.filter(author=author, user=request.user):
-        Follow.objects.get(author=author, user=request.user).delete()
-    return redirect('posts:profile', author.username)
+    get_object_or_404(
+        Follow,
+        author=get_object_or_404(User, username=username),
+        user=request.user,
+    ).delete()
+    return redirect('posts:profile', username)

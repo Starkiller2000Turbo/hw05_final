@@ -1,14 +1,13 @@
 from django.urls import path
 
 from posts import views
-from posts.apps import PostsConfig
 
-app_name = PostsConfig.name
+app_name = '%(app_label)s'
 
 urlpatterns = [
     path('', views.index, name='index'),
     path('create/', views.post_create, name='post_create'),
-    path('group/<slug>/', views.group_posts, name='group_list'),
+    path('group/<str:slug>/', views.group_posts, name='group_list'),
     path(
         'profile/<str:username>/follow/',
         views.profile_follow,

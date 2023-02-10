@@ -1,51 +1,42 @@
-from django.contrib.auth.views import (
-    LoginView,
-    LogoutView,
-    PasswordChangeDoneView,
-    PasswordChangeView,
-    PasswordResetCompleteView,
-    PasswordResetConfirmView,
-    PasswordResetDoneView,
-    PasswordResetView,
-)
+from django.contrib.auth import views
 from django.urls import include, path
 
-from users import apps, views
+from users.views import SignUp
 
-app_name = apps.UsersConfig.name
+app_name = '%(app_label)s'
 
 passwords = [
     path(
         'change/done/',
-        PasswordChangeDoneView.as_view(),
+        views.PasswordChangeDoneView.as_view(),
         name='pass_change_done',
     ),
     path(
         'change/',
-        PasswordChangeView.as_view(),
+        views.PasswordChangeView.as_view(),
         name='pass_change',
     ),
     path(
         'reset/done/',
-        PasswordResetDoneView.as_view(),
+        views.PasswordResetDoneView.as_view(),
         name='pass_reset_done',
     ),
-    path('reset/', PasswordResetView.as_view(), name='pass_reset'),
+    path('reset/', views.PasswordResetView.as_view(), name='pass_reset'),
     path(
         'reset/complete/',
-        PasswordResetCompleteView.as_view(),
+        views.PasswordResetCompleteView.as_view(),
         name='pass_reset_complete',
     ),
     path(
         'reset/<uidb64>/<token>',
-        PasswordResetConfirmView.as_view(),
+        views.PasswordResetConfirmView.as_view(),
         name='pass_reset_confirm',
     ),
 ]
 
 urlpatterns = [
-    path('logout/', LogoutView.as_view(), name='logout'),
-    path('signup/', views.SignUp.as_view(), name='signup'),
-    path('login/', LoginView.as_view(), name='login'),
+    path('logout/', views.LogoutView.as_view(), name='logout'),
+    path('signup/', SignUp.as_view(), name='signup'),
+    path('login/', views.LoginView.as_view(), name='login'),
     path('passwords/', include(passwords)),
 ]
