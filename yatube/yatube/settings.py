@@ -21,9 +21,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'behaviors.apps.BehaviorsConfig',
 
     'sorl.thumbnail',
+    'behaviors.apps.BehaviorsConfig',
 
     'about.apps.AboutConfig',
     'core.apps.CoreConfig',
