@@ -15,13 +15,13 @@ ALLOWED_HOSTS = [
 
 # fmt: off
 INSTALLED_APPS = [
-    'behaviors.apps.BehaviorsConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'behaviors.apps.BehaviorsConfig',
 
     'sorl.thumbnail',
 
