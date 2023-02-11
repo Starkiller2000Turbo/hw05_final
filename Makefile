@@ -6,7 +6,7 @@ style:
 	isort $(WORKDIR)
 	black -S -l 79 $(WORKDIR)
 	flake8 $(WORKDIR)
-	djlint $(TEMPLATES-DIR) --reformat --indent 2
+	djlint $(TEMPLATES-DIR) --reformat
 	mypy $(WORKDIR)
 
 migrations:

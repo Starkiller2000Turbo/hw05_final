@@ -15,6 +15,7 @@ ALLOWED_HOSTS = [
 
 # fmt: off
 INSTALLED_APPS = [
+    'behaviors.apps.BehaviorsConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
