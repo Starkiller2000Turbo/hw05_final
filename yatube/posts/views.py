@@ -180,10 +180,11 @@ def add_comment(request: HttpRequest, pk: str) -> HttpResponse:
     """
     post = get_object_or_404(Post, id=pk)
     form = CommentForm(request.POST or None)
-    if form.is_valid():
-        form.instance.author = request.user
-        form.instance.post = post
-        form.save()
+    if not form.is_valid():
+        return redirect('posts:post_detail', pk=pk)
+    form.instance.author = request.user
+    form.instance.post = post
+    form.save()
     return redirect('posts:post_detail', pk=pk)
 
 
@@ -195,7 +196,7 @@ def follow_index(request: HttpRequest) -> HttpResponse:
         request: Передаваемый запрос.
 
     Returns:
-        Возвращает рендер страницы редактирования поста.
+        Рендер страницы редактирования поста.
     """
     return render(
         request,
@@ -249,7 +250,7 @@ def profile_unfollow(request: HttpRequest, username: str) -> HttpResponse:
     """
     get_object_or_404(
         Follow,
-        author=get_object_or_404(User, username=username),
+        author__username=username,
         user=request.user,
     ).delete()
     return redirect('posts:profile', username)

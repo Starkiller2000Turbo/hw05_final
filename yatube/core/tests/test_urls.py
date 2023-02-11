@@ -7,7 +7,7 @@ from mixer.backend.django import mixer
 User = get_user_model()
 
 
-class PostURLTests(TestCase):
+class CoreURLTests(TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         super().setUpClass()

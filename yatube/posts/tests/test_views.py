@@ -15,7 +15,7 @@ User = get_user_model()
 
 
 def check_types_in_dict(
-    self,
+    self: TestCase,
     model: models.Model,
     fields: typing.Dict,
 ) -> None:
@@ -32,14 +32,10 @@ class PostPagesTests(TestCase):
 
     def setUp(self) -> None:
         cache.clear()
-        self.user = User.objects.create_user(username='auth')
-        self.group = Group.objects.create(
-            title='Тестовая группа',
-            slug='test_slug',
-            description='Тестовое описание',
-        )
-        self.post = Post.objects.create(
-            id=2,
+        self.user = mixer.blend(User, username='auth')
+        self.group = mixer.blend(Group, slug='test_slug')
+        self.post = mixer.blend(
+            Post,
             author=self.user,
             text='Тестовый пост',
             group=self.group,
@@ -49,15 +45,12 @@ class PostPagesTests(TestCase):
 
         self.authorized_client.force_login(self.user)
 
-    def test_pages_show_correct_context(self) -> None:
-        """Шаблоны страниц сформированы с правильным контекстом."""
+    def test_list_pages_show_correct_context(self) -> None:
+        """Шаблоны страниц с постами сформированы с правильным контекстом."""
         page_names = [
             reverse('posts:index'),
             reverse('posts:group_list', kwargs={'slug': 'test_slug'}),
             reverse('posts:profile', kwargs={'username': 'auth'}),
-            reverse('posts:post_detail', kwargs={'pk': '2'}),
-            reverse('posts:post_create'),
-            reverse('posts:post_edit', kwargs={'pk': '2'}),
         ]
         post_fields = {
             'text': models.TextField,
@@ -69,6 +62,49 @@ class PostPagesTests(TestCase):
             'description': models.TextField,
             'title': models.CharField,
         }
+        for page in page_names:
+            with self.subTest(page=page):
+                response = self.authorized_client.get(page)
+                for post in response.context.get('page_obj'):
+                    check_types_in_dict(self, post, post_fields)
+                    check_types_in_dict(
+                        self,
+                        post.group,
+                        group_fields,
+                    )
+
+    def test_post_page_shows_correct_context(self) -> None:
+        """Шаблон страницы поста сформирован с правильным контекстом."""
+        page = reverse('posts:post_detail', kwargs={'pk': self.post.pk})
+        post_fields = {
+            'text': models.TextField,
+            'created': models.DateTimeField,
+            'image': models.ImageField,
+        }
+        group_fields = {
+            'slug': models.SlugField,
+            'description': models.TextField,
+            'title': models.CharField,
+        }
+        with self.subTest(page=page):
+            response = self.client.get(page)
+            check_types_in_dict(
+                self,
+                response.context.get('post'),
+                post_fields,
+            )
+            check_types_in_dict(
+                self,
+                response.context.get('post').group,
+                group_fields,
+            )
+
+    def test_form_pages_show_correct_context(self) -> None:
+        """Шаблоны страниц форм постов сформированы с правильным контекстом."""
+        page_names = [
+            reverse('posts:post_create'),
+            reverse('posts:post_edit', kwargs={'pk': self.post.pk}),
+        ]
         form_fields = {
             'text': forms.fields.CharField,
             'group': forms.ModelChoiceField,
@@ -77,32 +113,16 @@ class PostPagesTests(TestCase):
         for page in page_names:
             with self.subTest(page=page):
                 response = self.authorized_client.get(page)
-                if response.context.get('post'):
-                    check_types_in_dict(
-                        self,
-                        response.context.get('post'),
-                        post_fields,
-                    )
-                    check_types_in_dict(
-                        self,
-                        response.context.get('post').group,
-                        group_fields,
-                    )
-                elif response.context.get('page_obj'):
-                    for post in response.context.get('page_obj'):
-                        check_types_in_dict(self, post, post_fields)
-                        check_types_in_dict(
-                            self,
-                            post.group,
-                            group_fields,
-                        )
-                elif response.context.get('form'):
-                    for value, expected in form_fields.items():
-                        with self.subTest(value=value):
-                            form_field = response.context.get(
+                for value, expected in form_fields.items():
+                    with self.subTest(value=value):
+                        self.assertIsInstance(
+                            response.context.get(
                                 'form',
-                            ).fields.get(value)
-                            self.assertIsInstance(form_field, expected)
+                            ).fields.get(
+                                value,
+                            ),
+                            expected,
+                        )
 
     def test_post_shows_up_on_pages(self) -> None:
         page_names = [
@@ -124,7 +144,7 @@ class CommentPagesTests(TestCase):
         super().setUpClass()
 
     def setUp(self) -> None:
-        self.user = User.objects.create_user(username='auth')
+        self.user = mixer.blend(User, username='auth')
         self.post = mixer.blend(
             Post,
             author=self.user,
@@ -249,7 +269,7 @@ class FollowPagesTests(TestCase):
             ),
         )
         self.assertEqual(
-            Follow.objects.filter(user=self.non_subscribed).count(),
+            self.non_subscribed.follower.count(),
             1,
         )
         self.non_subscribed_client.get(
@@ -259,6 +279,6 @@ class FollowPagesTests(TestCase):
             ),
         )
         self.assertEqual(
-            Follow.objects.filter(user=self.non_subscribed).count(),
+            self.non_subscribed.follower.count(),
             0,
         )

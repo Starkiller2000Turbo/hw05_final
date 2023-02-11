@@ -75,7 +75,7 @@ class UsersURLTests(TestCase):
                 self.assertTemplateUsed(response, template)
 
     def test_non_authorized_urls_exist_at_desired_location(self) -> None:
-        """Тестирование страниц на отсутствие авторизации"""
+        """Тестирование страниц на отсутствие авторизации."""
         pages = {
             '/auth/passwords/change/': (
                 '/auth/login/?next=/auth/passwords/change/'

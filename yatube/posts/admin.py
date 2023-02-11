@@ -56,6 +56,7 @@ class FollowAdmin(BaseAdmin):
         'pk',
         'user',
         'author',
+        '__str__',
     )
     list_filter = (
         'user',

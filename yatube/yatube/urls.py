@@ -9,10 +9,6 @@ handler403 = 'core.views.csrf_failure'
 
 urlpatterns = [
     path(
-        '',
-        include('posts.urls', namespace=apps.get_app_config('posts').name),
-    ),
-    path(
         'about/',
         include('about.urls', namespace=apps.get_app_config('about').name),
     ),
@@ -22,6 +18,10 @@ urlpatterns = [
         include('users.urls', namespace=apps.get_app_config('users').name),
     ),
     path('auth/', include('django.contrib.auth.urls')),
+    path(
+        '',
+        include('posts.urls', namespace=apps.get_app_config('posts').name),
+    ),
 ]
 
 if settings.DEBUG:

@@ -3,6 +3,7 @@ import tempfile
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.contrib.auth.views import redirect_to_login
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 from mixer.backend.django import mixer
@@ -94,53 +95,45 @@ class PostFormTests(TestCase):
 
     def test_anonymous_user_can_not_create(self) -> None:
         """Анонимный пользователь не может создать пост."""
-        form_data = {
+        data = {
             'text': 'Тестовый текст',
         }
         self.client.post(
             reverse('posts:post_create'),
-            data=form_data,
+            data=data,
             follow=True,
         )
         self.assertEqual(Post.objects.count(), 0)
 
     def test_anonymous_user_can_not_edit(self) -> None:
         """Анонимный пользователь не может изменить пост."""
-        user_author = mixer.blend(User)
-        author = Client()
-        author.force_login(user_author)
-        post = mixer.blend(Post, text='Тестовый текст', author=user_author)
-        form_data = {
+        post = mixer.blend(Post, text='Тестовый текст')
+        data = {
             'text': 'Изменённый тестовый текст',
         }
         self.client.post(
             reverse('posts:post_edit', kwargs={'pk': post.pk}),
-            data=form_data,
+            data=data,
             follow=True,
         )
         self.assertEqual(Post.objects.count(), 1)
         post = Post.objects.get()
         self.assertEqual(post.text, 'Тестовый текст')
-        self.assertEqual(post.author, user_author)
 
     def test_not_author_can_not_edit(self) -> None:
         """Не автор не может изменить пост."""
-        user_author = mixer.blend(User)
-        author = Client()
-        author.force_login(user_author)
-        post = mixer.blend(Post, text='Тестовый текст', author=user_author)
-        form_data = {
+        post = mixer.blend(Post, text='Тестовый текст')
+        data = {
             'text': 'Изменённый тестовый текст',
         }
-        self.auth.post(  #
+        self.auth.post(
             reverse('posts:post_edit', kwargs={'pk': post.pk}),
-            data=form_data,
+            data=data,
             follow=True,
         )
         self.assertEqual(Post.objects.count(), 1)
         post = Post.objects.get()
         self.assertEqual(post.text, 'Тестовый текст')
-        self.assertEqual(post.author, user_author)
 
 
 class CommentFormTests(TestCase):
@@ -150,7 +143,6 @@ class CommentFormTests(TestCase):
         cls.user = mixer.blend(User)
 
         cls.auth = Client()
-
         cls.auth.force_login(cls.user)
 
     def test_add_comment(self) -> None:
@@ -209,8 +201,71 @@ class FollowFormTests(TestCase):
         cls.auth.force_login(cls.user_auth)
         cls.author.force_login(cls.user_author)
 
+    def test_user_can_not_follow_himself(self) -> None:
+        """Запрос создаёт новую подписку."""
+        response = self.auth.post(
+            reverse(
+                'posts:profile_follow',
+                kwargs={'username': self.user_auth.get_username()},
+            ),
+            follow=True,
+        )
+        self.assertRedirects(
+            response,
+            reverse(
+                'posts:profile',
+                kwargs={'username': self.user_auth.get_username()},
+            ),
+        )
+        self.assertEqual(Follow.objects.count(), 0)
+
+    def test_anonym_can_not_follow(self) -> None:
+        """Запрос создаёт новую подписку."""
+        response = self.client.post(
+            reverse(
+                'posts:profile_follow',
+                kwargs={'username': self.user_author.get_username()},
+            ),
+            follow=True,
+        )
+        self.assertRedirects(
+            response,
+            redirect_to_login(
+                reverse(
+                    'posts:profile_follow',
+                    kwargs={'username': self.user_author.get_username()},
+                ),
+            ).url,
+        )
+        self.assertEqual(Follow.objects.count(), 0)
+
     def test_add_following(self) -> None:
         """Запрос создаёт новую подписку."""
+        response = self.auth.post(
+            reverse(
+                'posts:profile_follow',
+                kwargs={'username': self.user_author.get_username()},
+            ),
+            follow=True,
+        )
+        self.assertRedirects(
+            response,
+            reverse(
+                'posts:profile',
+                kwargs={'username': self.user_author.get_username()},
+            ),
+        )
+        self.assertEqual(Follow.objects.count(), 1)
+        following = Follow.objects.get()
+        self.assertEqual(following.author, self.user_author)
+        self.assertEqual(following.user, self.user_auth)
+
+    def test_can_not_add_same_following(self) -> None:
+        """Запрос создаёт новую подписку."""
+        following = Follow.objects.create(
+            user=self.user_auth,
+            author=self.user_author,
+        )
         response = self.auth.post(
             reverse(
                 'posts:profile_follow',

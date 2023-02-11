@@ -69,71 +69,69 @@ class PostURLTests(TestCase):
     def test_httpstatuses(self) -> None:
         """URL-адрес существует и выдаёт https статус 200."""
         httpstatuses = (
-            (self.urls.get('group'), HTTPStatus.OK, Client()),
-            (self.urls.get('index'), HTTPStatus.OK, Client()),
-            (self.urls.get('post'), HTTPStatus.OK, Client()),
-            (self.urls.get('profile'), HTTPStatus.OK, Client()),
-            (self.urls.get('create'), HTTPStatus.FOUND, Client()),
+            (self.urls.get('group'), HTTPStatus.OK, self.client),
+            (self.urls.get('index'), HTTPStatus.OK, self.client),
+            (self.urls.get('post'), HTTPStatus.OK, self.client),
+            (self.urls.get('profile'), HTTPStatus.OK, self.client),
+            (self.urls.get('create'), HTTPStatus.FOUND, self.client),
             (self.urls.get('create'), HTTPStatus.OK, self.auth),
-            (self.urls.get('edit'), HTTPStatus.FOUND, Client()),
+            (self.urls.get('edit'), HTTPStatus.FOUND, self.client),
             (self.urls.get('edit'), HTTPStatus.FOUND, self.auth),
             (self.urls.get('edit'), HTTPStatus.OK, self.author),
             (self.urls.get('comment'), HTTPStatus.FOUND, self.auth),
-            (self.urls.get('follow'), HTTPStatus.FOUND, Client()),
+            (self.urls.get('follow'), HTTPStatus.FOUND, self.client),
             (self.urls.get('follow'), HTTPStatus.OK, self.auth),
-            (self.urls.get('missing'), HTTPStatus.NOT_FOUND, Client()),
+            (self.urls.get('missing'), HTTPStatus.NOT_FOUND, self.client),
         )
-        for address, code, user in httpstatuses:
+        for address, code, client in httpstatuses:
             with self.subTest(
                 address=address,
                 code=code,
-                user=user,
+                client=client,
             ):
-                response = user.get(address)
-                self.assertEqual(response.status_code, code)
+                self.assertEqual(client.get(address).status_code, code)
 
     def test_templates(self) -> None:
         """URL-адрес использует соответствующий шаблон."""
         templates = (
-            (self.urls.get('group'), 'posts/group_list.html', Client()),
-            (self.urls.get('index'), 'posts/index.html', Client()),
-            (self.urls.get('post'), 'posts/post_detail.html', Client()),
-            (self.urls.get('profile'), 'posts/profile.html', Client()),
+            (self.urls.get('group'), 'posts/group_list.html', self.client),
+            (self.urls.get('index'), 'posts/index.html', self.client),
+            (self.urls.get('post'), 'posts/post_detail.html', self.client),
+            (self.urls.get('profile'), 'posts/profile.html', self.client),
             (self.urls.get('create'), 'posts/create_post.html', self.auth),
             (self.urls.get('edit'), 'posts/create_post.html', self.author),
             (self.urls.get('follow'), 'posts/follow.html', self.auth),
         )
-        for address, template, user in templates:
+        for address, template, client in templates:
             with self.subTest(
                 address=address,
                 template=template,
-                user=user,
+                client=client,
             ):
-                response = user.get(address)
-                self.assertTemplateUsed(response, template)
+                self.assertTemplateUsed(client.get(address), template)
 
     def test_redirects(self) -> None:
-        """Тестирование страниц на отсутствие авторизации"""
+        """Тестирование страниц на отсутствие авторизации."""
         pages = (
             (
                 self.urls.get('create'),
                 redirect_to_login(self.urls.get('create')).url,
-                Client(),
+                self.client,
             ),
             (
                 self.urls.get('edit'),
                 redirect_to_login(self.urls.get('edit')).url,
-                Client(),
+                self.client,
             ),
             (
                 self.urls.get('comment'),
                 redirect_to_login(self.urls.get('comment')).url,
-                Client(),
+                self.client,
             ),
             (
                 self.urls.get('follow'),
                 redirect_to_login(self.urls.get('follow')).url,
-                Client(),
+                self.client,
             ),
             (
                 self.urls.get('edit'),
@@ -141,11 +139,13 @@ class PostURLTests(TestCase):
                 self.auth,
             ),
         )
-        for page, redirect_page, user in pages:
+        for page, redirect_page, client in pages:
             with self.subTest(
                 page=page,
                 redirect_page=redirect_page,
-                user=user,
+                client=client,
             ):
-                response = user.get(page, follow=True)
-                self.assertRedirects(response, redirect_page)
+                self.assertRedirects(
+                    client.get(page, follow=True),
+                    redirect_page,
+                )
