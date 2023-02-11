@@ -12,11 +12,15 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name="comment",
             name="text",
-            field=models.TextField(help_text="Введите текст", verbose_name="текст"),
+            field=models.TextField(
+                help_text="Введите текст", verbose_name="текст"
+            ),
         ),
         migrations.AlterField(
             model_name="post",
             name="text",
-            field=models.TextField(help_text="Введите текст", verbose_name="текст"),
+            field=models.TextField(
+                help_text="Введите текст", verbose_name="текст"
+            ),
         ),
     ]

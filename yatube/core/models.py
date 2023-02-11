@@ -1,9 +1,31 @@
-from behaviors.behaviors import Timestamped
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db import models
+from django.utils import timezone
 
 User = get_user_model()
+
+
+class Timestamped(models.Model):
+    """
+    An abstract behavior representing timestamping a model with``created`` and
+    ``modified`` fields.
+    """
+
+    created = models.DateTimeField(auto_now_add=True, db_index=True)
+    modified = models.DateTimeField(null=True, blank=True, db_index=True)
+
+    class Meta:
+        abstract = True
+
+    @property
+    def changed(self) -> bool:
+        return True if self.modified else False
+
+    def save(self, *args, **kwargs) -> None:
+        if self.pk:
+            self.modified = timezone.now()
+        return super().save(*args, **kwargs)
 
 
 class DefaultModel(models.Model):
