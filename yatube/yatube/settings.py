@@ -23,7 +23,6 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     'sorl.thumbnail',
-    'behaviors.apps.BehaviorsConfig',
 
     'about.apps.AboutConfig',
     'core.apps.CoreConfig',
