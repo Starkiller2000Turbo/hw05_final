@@ -1,3 +1,71 @@
-# hw05_final
+### Проект Yatube. Python-разработчик (бэкенд) (Яндекс.Практикум)
 
-[![CI](https://github.com/yandex-praktikum/hw05_final/actions/workflows/python-app.yml/badge.svg?branch=master)](https://github.com/yandex-praktikum/hw05_final/actions/workflows/python-app.yml)
+### Описание:
+
+Проект Yatube - социальная сеть, в которой на основании Django ORM каждый пользователь может публиковать записи, а также редактировать или удалять свои уже существующие
+
+Была реализована система подписок на авторов на основании приложения django.contrib.auth. 
+
+Благодаря основам HTML, шаблонизации и CSS была создана страница регистрации пользователей, страницы профиля пользователя, группы, а также редактирования поста.
+
+К проекту была подключена база данных, была реализована пагинация страниц, кэширование, в админ-зоне обеспечено управление объектами. 
+
+Было реализовано тестирование работы проекта с помощью Unittest.
+
+### Как запустить проект:
+
+Клонируйте репозиторий:
+```
+git clone git@github.com:Starkiller2000Turbo/hw05_final.git
+```
+
+Измените свою текущую рабочую дерикторию:
+```
+cd /hw05_final/
+```
+
+Создайте и активируйте виртуальное окружение
+
+```
+python -m venv venv
+```
+
+```
+source venv/Scripts/activate
+```
+
+Обновите pip:
+```
+python3 -m pip install --upgrade pip
+```
+
+Установите зависимости из requirements.txt:
+
+```
+pip install -r requirements.txt
+```
+
+Создайте миграции:
+
+```
+cd yatube
+python manage.py migrate
+```
+Запустите сервер:
+
+```
+python manage.py runserver
+```
+
+### Авторы:
+
+- :white_check_mark: [Starkiller2000Turbo](https://github.com/Starkiller2000Turbo)
+
+### Стек технологий использованный в проекте:
+
+- Python
+- Django
+- Django REST Framework
+- Unittest
+- HTML
+- CSS

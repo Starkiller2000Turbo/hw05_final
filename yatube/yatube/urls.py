@@ -4,6 +4,7 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
 
+
 handler404 = 'core.views.page_not_found'
 handler403 = 'core.views.csrf_failure'
 
@@ -24,8 +25,14 @@ urlpatterns = [
     ),
 ]
 
+urlpatterns += static(
+    settings.MEDIA_URL,
+    document_root=settings.MEDIA_ROOT,
+)
+
 if settings.DEBUG:
-    urlpatterns += static(
-        settings.MEDIA_URL,
-        document_root=settings.MEDIA_ROOT,
-    )
+    import debug_toolbar
+    import mimetypes
+
+    mimetypes.add_type("application/javascript", ".js", True)
+    urlpatterns += (path('__debug__/', include(debug_toolbar.urls)),)

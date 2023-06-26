@@ -11,6 +11,8 @@ ALLOWED_HOSTS = [
     '127.0.0.1',
     '[::1]',
     'testserver',
+    'www.starkiller.pythonanywhere.com',
+    'starkiller.pythonanywhere.com',
 ]
 
 # fmt: off
@@ -22,6 +24,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
+    'debug_toolbar',
     'sorl.thumbnail',
 
     'about.apps.AboutConfig',
@@ -39,6 +42,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
 ]
 
 ROOT_URLCONF = 'yatube.urls'
@@ -99,7 +103,7 @@ USE_L10N = True
 
 USE_TZ = True
 
-STATIC_URL = '/static/'
+STATIC_URL = '/yatube/static/'
 
 OBJECTS_ON_PAGE = 10
 
@@ -126,5 +130,9 @@ CACHES = {
 }
 
 OBJECTS_ON_PAGE = 10
+
+INTERNAL_IPS = [
+    '127.0.0.1',
+]
 
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
